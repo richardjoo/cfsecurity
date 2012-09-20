@@ -146,5 +146,126 @@
 		
 		return isQualified;
 	} // function isArgQualified(argUser)
+	
+	
+	
+	
+	
+	
+	/**
+	* getting the user info from the security users table.
+	
+		REQUIRMENTS:
+			this function will request different requirements depending on what platform it is, what user level it is.
+			here are the list of requirements
+			ACF compatible code
+			
+			mandatory
+				platform
+				site
+				
+			if platform = ABC
+				ABC_userid
+				
+				if ABC_user_level = interpreter
+					language_id_list
+					
+			
+			if platform = DEF
+				DEF_userid
+				DEF_roleid
+				
+				if DEF_roleid = DEF_Registry.dbo.Roles.ID WHERE Role='interpreter'
+					language_id_list
+	*/
+	function getUserInfo(argUser)
+	{
+		// Declaration
+		var userObj = CreateObject("component", "security");
+		var isQualified=0;
+		var objFactory ="";
+		var objDataService = "";
+		var objDataSource = "";
+		var objConnection = "";
+		var objStatement = "";
+		var objResults = "";
+		var retQuery = "";
+		
+		isQualified = userObj.isArgQualified(argUser);
+			
+		try
+		{
+			
+			// checking required arguments
+			if (isQualified)
+			{
+				
+				// First, we need to get access to the ColdFusion service
+				// factory. This is a Java object that we can instantiate.
+				objFactory = CreateObject("java", "coldfusion.server.ServiceFactory");
+
+				// Get the Data Source service from the service factory.
+				objDataService = objFactory.DataSourceService;
+
+				// The data service object has access to all data sources
+				// running on the server. Let's get a connection to our
+				// datasource before running the query.
+				objDataSource = objDataService.GetDataSource("security");
+
+				// Open the connection. Here, we have the option to pass
+				// in a username and password. Since I am on the dev
+				// server, no need to do so.
+				//objConnection = objDataSource.GetConnection(
+				// USERNAME, PASSWORD if needed //
+				//);
+				objConnection = objDataSource.GetConnection();
+
+				// Prepare the SQL statement
+				if (Not CompareNoCase(argUser.platform, 'ABC'))
+				{
+					objStatement = objConnection.PrepareStatement(
+									"SELECT `id`, `DEF_userid`, `DEF_roleid`, `ABC_userid`, `language_id_list`, " & 
+									"`platform`, `remote_host`, `site`, `telephonic_allowed`, `timestamp`, `key` " &
+									"FROM `users` " &
+									"WHERE (`ABC_userid`=#argUser.ABC_userid#) AND (`ABC_user_level`='#argUser.ABC_user_level#') AND (`platform`='#argUser.platform#') AND (`site`='#argUser.site#')");
+				}
+				else if (Not CompareNoCase(argUser.platform, 'DEF'))
+				{
+					objStatement = objConnection.PrepareStatement(
+									"SELECT `id`, `DEF_userid`, `DEF_roleid`, `ABC_userid`, `language_id_list`, " & 
+									"`platform`, `remote_host`, `site`, `telephonic_allowed`, `timestamp`, `key` " &
+									"FROM `users` " &
+									"WHERE (`DEF_userid`='#argUser.DEF_userid#') AND (`DEF_roleid`='#argUser.DEF_roleid#') AND (`platform`='#argUser.platform#') AND (`site`='#argUser.site#')");
+				}
+
+
+				// Execute the prepared SQL statement. This line alone returns
+				// the java class: "macromedia.jdbc.base.BaseResultSet". In order
+				// to work with this most effectively, we have to turn it into
+				// the Java class "coldfusion.sql.QueryTable". This is the class
+				// of object that is returned from the CFQuery tag, and the type
+				// of object that we are all used to working with.
+				objResults = CreateObject("java","coldfusion.sql.QueryTable").Init( objStatement.ExecuteQuery() );
+				
+				retQuery = objResults;
+
+				// Close the connection.
+				objConnection.Close();
+			
+				
+			} // end of if (isArgQualified(argUser))
+			
+			
+		}
+		catch (any e)
+		{
+			writeoutput("<script language='JavaScript'>
+							<!-- 
+								alert('error occurred: #e.detail#\n\n #e.type#\n\n code:\n942212051317621003067'); 
+							//--></script>");
+		}
+		
+		return retQuery;
+	}
 </cfscript>
 </cfcomponent>

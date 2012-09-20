@@ -13,3 +13,12 @@ This one runs its own database alone with any existing databases you have.  And 
 
 Also, I am hoping someone can take a look at this code and help me to improve.  I wrote this one last year and haven't looked at it until now (9/5/2012), so, it will be a good chance for me to refresh my mind as well.
 
+
+
+files
+==========
+CFC/security.cfc
+    security core engine for ACF8+
+    
+CFC/security_railo.cfc
+    security code engine for Railo
